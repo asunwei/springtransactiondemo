@@ -1,0 +1,22 @@
+CREATE TABLE `account` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) NOT NULL,
+  `money` double DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+
+
+INSERT INTO `account` VALUES ('1', 'aaa', '1000');
+INSERT INTO `account` VALUES ('2', 'bbb', '1000');
+INSERT INTO `account` VALUES ('3', 'ccc', '1000');
+
+https://www.cnblogs.com/zhaozihan/p/6219776.html
+https://github.com/saysky/ForestBlog
+
+编程式事务：在编程式的事务管理中，我们需要手动的去修改业务层的代码。
+
+声明式事务：声明式事务管理是基于AOP技术实现，其主要思想是将事务管理作为一个“切面”代码单独编写，
+		我们只用关心核心业务逻辑代码，然后通过AOP技术将事务管理的“切面”代码织入到业务类中。
+		
+https://blog.csdn.net/liaohaojian/article/details/70139151
+https://www.ibm.com/developerworks/cn/education/opensource/os-cn-spring-trans/

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans.xsd 
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- 引入外部属性文件 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    
+    <!-- 配置c3p0连接池 -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driver}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.pwd}"/>
+    </bean>
+    
+    <!-- 配置业务层 -->
+    <bean id="accountService" class="com.transaction.service.AccountServiceImpl">
+        <property name="accountDao" ref="accountDao"/>
+    </bean>
+    
+    <!-- 配置DAO层,注入连接池就可以得到jdbc模板-->
+    <bean id="accountDao" class="com.transaction.dao.AccountDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+	<!--   
+	<tx:advice>定义事务通知，用于指定事务属性，其中“transaction-manager”属性指定事务管理器，相当于指定切面，
+	并通过<tx:attributes>指定具体需要拦截的方法  
+    <tx:method>拦截方法，其中参数有：  
+    name:方法名称，将匹配的方法注入事务管理，可用通配符  
+    propagation：事务传播行为，  
+    isolation：事务隔离级别定义；默认为“DEFAULT”  
+    timeout：事务超时时间设置，单位为秒，默认-1，表示事务超时将依赖于底层事务系统；  
+    read-only：事务只读设置，默认为false，表示不是只读；  
+    rollback-for：需要触发回滚的异常定义，可定义多个，以“，”分割，默认任何RuntimeException都将导致事务回滚，而任何Checked Exception将不导致事务回滚；  
+    no-rollback-for：不被触发进行回滚的 Exception(s)；可定义多个，以“，”分割；   -->  
+	<!-- 配置事务的增强/通知 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="transfer" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+    
+    <!-- 配置切面 -->
+    <aop:config>
+        <!-- 配置切点 -->
+        <!-- 在切点当中的表达式第一个 * 代表方法的返回值，AccountService后的+代表他的子类，最后的 * 
+        	（..）代表任意的方法和参数。切面则由切点和增强构成，即在这个切点上运用这个增强。
+        	代表切面的标签有两个，一个是 < aop:aspect > 代表多个切入点和多个通知，
+        	另一个是 < aop:advisor > 代表一个切入点和一个通知，这个例题里只有一个增强“txAdvice”，
+        	所以就使用了asvisor标签。 -->
+        <aop:pointcut expression="execution(* com.transaction.service.AccountService+.*(..))" id="pointcut1"/>
+        <!-- 配置切面 -->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut1"/>
+    </aop:config>
+</beans>

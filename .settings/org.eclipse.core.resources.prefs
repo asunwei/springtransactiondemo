@@ -1,0 +1,15 @@
+eclipse.preferences.version=1
+encoding//src/main/java=UTF-8
+encoding//src/main/java/com/transaction/dao/AccountDao.java=UTF-8
+encoding//src/main/java/com/transaction/dao/AccountDaoImpl.java=UTF-8
+encoding//src/main/java/com/transaction/service/AccountService.java=UTF-8
+encoding//src/main/java/com/transaction/service/AccountServiceImpl.java=UTF-8
+encoding//src/main/java/com/transaction/service/AccountServiceImplBCAPI.java=UTF-8
+encoding//src/main/java/com/transaction/service/AccountServiceImplBCTemp.java=UTF-8
+encoding//src/test/java=UTF-8
+encoding//src/test/java/com/transaction/service/SpringTest2.java=UTF-8
+encoding//src/test/java/com/transaction/service/SpringTest3.java=UTF-8
+encoding//src/test/java/com/transaction/service/SpringTest4.java=UTF-8
+encoding//src/test/java/com/transaction/service/SpringTestBCAPI.java=UTF-8
+encoding//src/test/java/com/transaction/service/SpringTestBCTemp.java=UTF-8
+encoding/<project>=UTF-8

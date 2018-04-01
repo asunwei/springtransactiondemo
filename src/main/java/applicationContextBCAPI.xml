@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans.xsd 
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+    http://www.springframework.org/schema/aop/spring-aop.xsd
+    http://www.springframework.org/schema/tx
+    http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+	<!-- 引入外部属性文件 -->
+	<context:property-placeholder location="classpath:jdbc.properties" />
+
+	<!-- 配置c3p0连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driver}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.user}" />
+		<property name="password" value="${jdbc.pwd}" />
+	</bean>
+
+	<!-- 配置DAO层,注入连接池就可以得到jdbc模板 -->
+	<bean id="accountDao" class="com.transaction.dao.AccountDaoImpl">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 配置SpringJdbc的事务管理器 ，用于执行具体的事务操， DataSourceTransactionManage，适用于使用JDBC和iBatis进行数据持久化操作的情况 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 配置业务层, 编程式事务 -->
+	<bean id="accountService" class="com.transaction.service.AccountServiceImplBCAPI">
+		<property name="accountDao" ref="accountDao" />
+		<!-- 注入事务管理模板 -->
+		<property name="txManager" ref="transactionManager"/>
+		<property name="txDefinition">
+			<bean
+				class="org.springframework.transaction.support.DefaultTransactionDefinition">
+				<property name="propagationBehaviorName" value="PROPAGATION_REQUIRED" />
+			</bean>
+		</property>
+	</bean>
+
+
+
+</beans>
