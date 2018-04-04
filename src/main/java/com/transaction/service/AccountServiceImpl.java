@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.transaction.dao.AccountDao;
 /**
- * 声明式事务演示。代码不许改动
+ * 声明式事务演示，代码不需要改动
  * @author sunwei
  *
  */
@@ -19,7 +19,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     
-  //基于注解--4，只能注解在方法上
+    //基于注解--4，只能注解在方法上
     @Transactional(propagation=Propagation.REQUIRED, isolation=Isolation.DEFAULT)
     public void transfer( String out,  String in,  Double money) {
         accountDao.outMoney(out, money);
