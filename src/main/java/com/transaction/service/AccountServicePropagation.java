@@ -9,6 +9,6 @@ public interface AccountServicePropagation {
 	 * @param in   ： 转入账号
 	 * @param money： 转账金额
 	 */
-	public void transfer(String out, String in, Double money);
-	public void doTransfer(String out, String in, Double money);
+	public void methodA(String out, String in, Double money);
+	public void methodB(String out, String in, Double money);
 }

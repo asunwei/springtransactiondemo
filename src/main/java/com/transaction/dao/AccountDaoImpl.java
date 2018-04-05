@@ -21,13 +21,13 @@ public class AccountDaoImpl implements AccountDao {
     public void outMoney(String out, Double money) {
         String sql = "update account set money = money - ? where name = ?";
         this.jdbcTemplate.update(sql,money,out);
-        System.out.println(out + "取出金额：" + money);
+        System.out.println(out + ": " + money);
     }
 
     public void inMoney(String in, Double money) {
         String sql = "update account set money = money + ? where name = ?";
         this.jdbcTemplate.update(sql, money,in);
-        System.out.println(in + "存入金额：" + money);
+        System.out.println(in + ": " + money);
     }
 
 }

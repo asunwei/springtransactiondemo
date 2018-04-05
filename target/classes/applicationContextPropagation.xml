@@ -27,10 +27,16 @@
     <!-- 配置业务层 -->
     <bean id="accountService" class="com.transaction.service.AccountServiceImplPropagation">
         <property name="accountDao" ref="accountDao"/>
+        <property name="recordDao" ref="recordDao"/>
     </bean>
     
-    <!-- 配置DAO层,注入连接池就可以得到jdbc模板-->
+    <!-- 配置 account DAO层,注入连接池就可以得到jdbc模板-->
     <bean id="accountDao" class="com.transaction.dao.AccountDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    
+    <!-- 配置record DAO层,注入连接池就可以得到jdbc模板-->
+    <bean id="recordDao" class="com.transaction.dao.RecordDaoImpl">
         <property name="dataSource" ref="dataSource"/>
     </bean>
     

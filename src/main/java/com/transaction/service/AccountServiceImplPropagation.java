@@ -1,76 +1,110 @@
 package com.transaction.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.transaction.dao.AccountDao;
+import com.transaction.dao.RecordDao;
+
+import javax.annotation.PostConstruct;
 /**
  * 声明式事务演示和事务传播演示
  * @author sunwei
  *
  */
 public class AccountServiceImplPropagation implements AccountServicePropagation {
-    //注入DAO类
+    //注入 Account DAO类
     private AccountDao accountDao;
+    public void setAccountDao(AccountDao accountDao) { this.accountDao = accountDao;}
+    //注入 Record Dao类
     
-    public void setAccountDao(AccountDao accountDao) {
-        this.accountDao = accountDao;
+    private RecordDao recordDao;
+    public void setRecordDao(RecordDao recordDao) { this.recordDao = recordDao;}
+    
+    
+    //在一个类处理两个方法的 Propagation.REQUIRED 和 Propagation.REQUIRES_NEW。
+    @Autowired  //注入上下文  
+    private ApplicationContext context;  
+     
+    //表示代理对象，不是目标对象  
+    private AccountServicePropagation proxySelf; 
+    @PostConstruct  //初始化方法  
+    private void setSelf() {  
+        //从上下文获取代理对象（如果通过proxtSelf=this是不对的，this是目标对象）  
+        //此种方法不适合于prototype Bean，因为每次getBean返回一个新的Bean  
+    	proxySelf = context.getBean(AccountServicePropagation.class);   
     }
-
+    
+    private void doAccount(String out,  String in,  Double money) {
+    	accountDao.outMoney(out, money);
+        accountDao.inMoney(in, money);
+    }
+    
+    private void doRecord(String out, String in, int count) {
+    	recordDao.outCount(out, count);
+    	recordDao.inCount(in, count);
+    }
     
     //基于注解，只能注解在方法上
     //@Transactional(propagation=Propagation.REQUIRED, isolation=Isolation.DEFAULT)
     /*
      * doTransfer()一直存在一个事务用来演示：
      * 
-     * 1.当此方法（transfer）没有事务，由于事务的传播性，doAgaintransfer标注事务，当有异常，回滚数据。
+     * 0.当此方法（transfer）没有事务，由于事务的传播性，doAgaintransfer标注事务，当有异常，回滚数据。
      * 
-     * 2.当此方法（transfer）事务为REQUIRED，如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中。这是 最常见的选择。
-     * 	若调用doTransfer（）,将transfer（）加入doTransfer()事务运行， 
-     *  若直接掉transfer（），当前没有事务，创建一个事务运行。 
-     *  
-     * 3.当此方法（transfer）事务为SUPPORTS,支持当前事务以其事务运行，如果当前没有事务，就以非事务方式执行。有异常不回滚。
-     *  若调用doTransfer（）,将transfer（）加入doTransfer()事务运行， 
-     *  若直接掉transfer（），当前没有事务，以非事务运行。
-     *  
-     * 4.当此方法（transfer）事务为MANDATORY,使用当前的事务，如果当前没有事务，就抛出异常
-     * 	若调用doTransfer（）,将transfer（）加入doTransfer()事务运行， 
-     *  若直接掉transfer（），则抛出异常 
-     *  
-     * 5.当此方法（transfer）事务为REQUIRES_NEW,新建事务，如果当前存在事务，把当前事务挂起。??
-     *	若调用doTransfer（）,将doTransfer()事务挂起，运行transfer（）抛出异常不会影响外部事务，内部事务结束，外部事务正常运行， 
-     *  若直接掉transfer（），正常创建事务运行
-     *  
-     * 6.当此方法（transfer）事务为NOT_SUPPORTED,以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。 ??
+     * 1. Propagation.REQUIRED：如果当前存在事务，使用当期事务，如果不存在，创建一个事务运行。
+     * Test调用methodB， 当前不存在事务， 创建一个新事务运行。有错误回滚。
+     * Test调用methodA， 当前存在事务，以A事务运行。
      * 
+     * 2. Propagation.REQUIRES_NEW：如果当前存在事务，当前事务挂起，创建一个新事务运行。
+     * Test调用methodB， 当前不存在事务， 创建一个新事务运行。有错误回滚
+     * Test调用methodA， 当前存在事务，将事务A挂起，在methodB抛出运行异常，结果：methodB数据回滚，methodA方法数据提交。
+     * Test调用methodA， 当前存在事务，将事务A挂起，在methodA抛出运行异常,methodB运行结束，结果：因为事务A被挂起，methodA数据回滚，methodB方法数据提交。
      * 
-     * 7.当此方法（transfer）事务为NEVER,以非事务方式执行，如果当前存在事务，则抛出异常。 ??
+     * 3. Propagation.SUPPORTS：如果当前存在事务，使用当前事务，如果不存在，以非事务运行。
+     * Test调用methodB， 当前不存在事务， 以非事务运行。有错误不回滚。
+     * Test调用methodA， 当前存在事务，以A事务运行。
      * 
+     * 4. Propagation.NOT_SUPPORTED：如果当前存在事务，将当前事务挂起，以非事务运行。总是以非事务运行。
+     * Test调用methodB， 当前不存在事务， 以非事务运行。有错误不回滚。
+     * Test调用methodA， 当前存在事务，将事务A挂起，以非事务运行。
      * 
-     * 8.当此方法（transfer）事务为NESTED,如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则执行与 PROPAGATION_REQUIRED 类似的操作。 
+     * 5. Propagation.MANDATORY：当前存在事务，使用当前事务，如果不存在事务，则抛异常，总是以事务运行。
+     * Test调用methodB， 当前不存在事务， 抛出异常
+     * Test调用methodA， 当前存在事务，以事务A运行。
+     * 
+     * 6. Propagation.NEVER：如果当前存在事务，则抛异常，总是以非事务运行
+     * Test调用methodB， 当前不存在事务， 以非事务运行。
+     * Test调用methodA， 当前存在事务， 抛出异常
+     * 
+     * 7、Propagation.NESTED如果当前存在事务，则运行在一个嵌套的事务中. 如果没有事务, 
+     *    则按TransactionDefinition.PROPAGATION_REQUIRED 属性执行。需要JDBC3.0以上支持。
      */
-    @Transactional(propagation=Propagation.NOT_SUPPORTED)
-    public void transfer( String out,  String in,  Double money) {
-        accountDao.outMoney(out, money);
-        accountDao.inMoney(in, money);
-    	//抛出异常。
-        try{
-        	throw new RuntimeException();
- 		  } catch(RuntimeException e){
- 		    e.printStackTrace();
- 		  }
+    
+   
+    @Transactional(propagation=Propagation.REQUIRES_NEW)
+    public void methodB( String out,  String in,  Double money) {
+        doAccount(out, in, money);
+    	//抛出异常。注意，SpringAop能捕获未处理异常可回滚，或者在catch中加入throw new RuntimeException();
+        int i = 1/0;
     }
     
     
-   @Transactional(propagation=Propagation.REQUIRED)
-   //1. 当doAgaintransfer演示事务传播性，
-    public void doTransfer( String out,  String in,  Double money) {
-	   accountDao.outMoney(out, money);
-	   accountDao.inMoney(in, money);
+    @Transactional(propagation=Propagation.REQUIRED)
+    public void methodA( String out,  String in, Double money) {
+    	int count = (int) (money/100);
+	   doRecord(out, in, count);
 	   try{
-		   transfer(out,in, money);
+		   proxySelf.methodB(out,in, money);
+		   System.out.println("finish");
 		  } catch(RuntimeException e){
 			  e.printStackTrace();
+			  //抛出异常。注意，SpringAop能捕获未处理异常可回滚，或者在catch中加入throw new RuntimeException();
+			  //throw new RuntimeException();
 		  }
     }
+   
 }

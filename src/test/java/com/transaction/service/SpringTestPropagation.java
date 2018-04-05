@@ -1,14 +1,14 @@
 package com.transaction.service;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+
 /**
  * 声明式编程  - 注解的方式和事务传播测试
  * @author sunwei
@@ -24,16 +24,26 @@ public class SpringTestPropagation {
 	@Qualifier(value="accountService")
 	private AccountServicePropagation accountService;
 	
+	//private Logger logger = LoggerFactory.getLogger(getClass());
+	protected transient Log logger = LogFactory.getLog(getClass());
+	//boolean debugEnabled = logger.isDebugEnabled();
+	
+	
 	String in = "bbb";
 	String out = "aaa";
 
 	@Test
-	public void testTransfer() {
-		accountService.transfer(in, out, 100d);
+	public void testMethodB() {
+		logger.info("==============================");
+		logger.debug("debug");
+		accountService.methodB(in, out, 100d);
+		logger.info("==============================");
 	}
 	
 	@Test
-	public void testDoTransfer() {
-		accountService.doTransfer(in, out, 100d);
+	public void testMethodA() {
+		logger.info("==============================");
+		accountService.methodA(in, out, 100d);
+		logger.info("==============================");
 	}
 }
