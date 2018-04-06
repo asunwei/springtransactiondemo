@@ -16,14 +16,17 @@ public class RecordDaoImpl implements RecordDao {
 		public void outCount(String out, int count) {
 			String sql = "update record set count = count - ? where name = ?";
 	        this.jdbcTemplate.update(sql,count,out);
-	        System.out.println(out + "：" + count);
+	        System.out.println("RECORD: " + out + " " + count);
 			
 		}
 
 		public void inCount(String in, int count) {
 			String sql = "update record set count = count + ? where name = ?";
 	        this.jdbcTemplate.update(sql, count,in);
-	        System.out.println(in + "：" + count);
+	        System.out.println("RECORD: " + in + " " + count);
 		}
 
 }
+
+
+ 

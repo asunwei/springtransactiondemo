@@ -19,13 +19,12 @@ public class AccountServiceImplPropagation implements AccountServicePropagation 
     //注入 Account DAO类
     private AccountDao accountDao;
     public void setAccountDao(AccountDao accountDao) { this.accountDao = accountDao;}
-    //注入 Record Dao类
     
+    //注入 Record Dao类
     private RecordDao recordDao;
     public void setRecordDao(RecordDao recordDao) { this.recordDao = recordDao;}
     
-    
-    //在一个类处理两个方法的 Propagation.REQUIRED 和 Propagation.REQUIRES_NEW。
+    //在一个类处理两个方法的 事务类型不同。
     @Autowired  //注入上下文  
     private ApplicationContext context;  
      
@@ -51,7 +50,7 @@ public class AccountServiceImplPropagation implements AccountServicePropagation 
     //基于注解，只能注解在方法上
     //@Transactional(propagation=Propagation.REQUIRED, isolation=Isolation.DEFAULT)
     /*
-     * doTransfer()一直存在一个事务用来演示：
+     * methodA()一直存在一个事务用来演示：
      * 
      * 0.当此方法（transfer）没有事务，由于事务的传播性，doAgaintransfer标注事务，当有异常，回滚数据。
      * 
@@ -81,29 +80,39 @@ public class AccountServiceImplPropagation implements AccountServicePropagation 
      * Test调用methodA， 当前存在事务， 抛出异常
      * 
      * 7、Propagation.NESTED如果当前存在事务，则运行在一个嵌套的事务中. 如果没有事务, 
-     *    则按TransactionDefinition.PROPAGATION_REQUIRED 属性执行。需要JDBC3.0以上支持。
+     *   则按TransactionDefinition.PROPAGATION_REQUIRED 属性执行。需要JDBC3.0以上支持。
+     *    
+     *    事务A
+     *    methodA（）{
+     *    	methodB();
+     *    }
+     *    
+     *    事务B
+     *    methodB(){}
      */
     
    
-    @Transactional(propagation=Propagation.REQUIRES_NEW)
+    @Transactional(propagation=Propagation.NEVER)
     public void methodB( String out,  String in,  Double money) {
         doAccount(out, in, money);
-    	//抛出异常。注意，SpringAop能捕获未处理异常可回滚，或者在catch中加入throw new RuntimeException();
-        int i = 1/0;
+    	//抛出异常。注意，SpringAop只能捕获未处理运行异常或者throw new RuntimeException();
+        //int i = 1/0;
     }
     
     
     @Transactional(propagation=Propagation.REQUIRED)
     public void methodA( String out,  String in, Double money) {
     	int count = (int) (money/100);
-	   doRecord(out, in, count);
-	   try{
-		   proxySelf.methodB(out,in, money);
-		   System.out.println("finish");
+		doRecord(out, in, count);
+		proxySelf.methodB(out,in, money);
+		// int i = 1/0;
+		
+		//只有演示 Propagation.REQUIRED 和 Propagation.REQUIRES_NEW情况下使用try catch，
+		//由于要保证methodA没有抛错，and methodB抛错的场景
+    	try{
+    		//proxySelf.methodB(out,in, money);
 		  } catch(RuntimeException e){
 			  e.printStackTrace();
-			  //抛出异常。注意，SpringAop能捕获未处理异常可回滚，或者在catch中加入throw new RuntimeException();
-			  //throw new RuntimeException();
 		  }
     }
    

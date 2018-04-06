@@ -23,7 +23,6 @@ INSERT INTO `record` VALUES ('2', 'bbb', '20');
 INSERT INTO `record` VALUES ('3', 'ccc', '20');
 
 https://www.cnblogs.com/zhaozihan/p/6219776.html
-https://github.com/saysky/ForestBlog
 
 编程式事务：在编程式的事务管理中，我们需要手动的去修改业务层的代码。
 
